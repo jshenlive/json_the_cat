@@ -2,27 +2,33 @@ const request = require("request");
 
 const args = process.argv.slice(2, 3);
 
-const url = 'https://api.thecatapi.com/v1/breeds/search?q=' + args;
-request(url, (error, response, body) => {
-  // console.log(typeof body);
 
-  if (error !== null) {
-    console.log('error', error);
-    console.log("Request failed.");
-    return;
-  }
-  // console.log(response.statusCode);
-  if (response.statusCode === 404) {
-    console.log("Status Code: 404 (Bad URL)");
-    return;
-  }
+let err, desc;
+const fetchBreedDescription = function (breed, callback) {
 
-  const data = JSON.parse(body);
-  if (data.length < 1) {
-    console.log("Breed not found");
-    return;
-  }
+  const url = 'https://api.thecatapi.com/v1/breeds/search?q=' + breed;
 
-  console.log(data[0].description);
+  request(url, (error, response, body) => {
+    if (error !== null) {
+      console.log(error);
+      err = error;
+    }
+    if (response.statusCode === 404) {
+      //     console.log("Status Code: 404 (Bad URL)");
+      err = response.statusCode;
+    }
+    const data = JSON.parse(body);
+    // console.log(data);
+    if (data.length < 1) {
+      // console.log("Breed not found");
+      err = error;
+      desc = null;
+    }
+    if (err === null && data.length >= 1) {
+      desc = data[0].description;
+    }
+    callback(err, desc);
+  })
+};
 
-});
+module.exports = { fetchBreedDescription };
